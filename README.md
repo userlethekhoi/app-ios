@@ -6,9 +6,12 @@ confirmation.
 
 ## Companion tweak (`tweak/`)
 
-`tweak/` now ships the Logos source of `IAPCheck.dylib`, built with Theos as
-`com.adr.checkiap.tweak` (rootless). It is injected into every UIKit process
-plus `storekitd`/`itunesstored`:
+`tweak/` ships the Logos source built with Theos as `com.adr.checkiap.tweak`
+(rootless). The package installs **two** substrate modules sharing one binary
+source — `IAPCheck.dylib` (injected into every UIKit app) and
+`IAPCheckDaemon.dylib` (injected into `storekitd`/`itunesstored`). Two plists
+are required because MobileSubstrate AND-matches `Bundles`+`Executables` in a
+single filter, so a combined filter would never load anywhere:
 
 - Inside an app it swizzles `SKProductsRequest`/`SKPaymentQueue`, captures
   every product the host app fetches (price, subscription period, free-trial
@@ -31,9 +34,12 @@ Build it with:
 make -C tweak package FINALPACKAGE=1
 ```
 
-Install the produced `.deb` on a jailbroken/rootless device. NappStore then
-lists every installed app (via `LSApplicationWorkspace` on jailbreak/TrollStore
-devices) and shows the tweak's snapshots with trial/discount badges.
+Install the produced `.deb` on a jailbroken/rootless device — **the tweak is a
+separate package and is required** for scan/purchase handoff (install it via
+Sileo/Zebra/Filza, then the app `.ipa` via TrollStore or the `com.dini.pay` deb).
+NappStore then lists every installed app (via `LSApplicationWorkspace` on
+jailbreak/TrollStore devices) and shows the tweak's snapshots with
+trial/discount badges.
 
 ## Build an IPA without xcodebuild
 
