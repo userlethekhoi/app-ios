@@ -47,7 +47,7 @@ public struct ExploreStoreView: View {
                     if searchService.isSearching {
                         ProgressView("Đang tìm trên App Store…")
                             .frame(maxWidth: .infinity)
-                            .tint(.iappayPurple)
+                            .tint(.iappayAccent)
                             .foregroundColor(.iappayTextSecondary)
                             .padding(.vertical, 24)
                     } else if !searchService.searchResults.isEmpty {
@@ -91,12 +91,10 @@ public struct ExploreStoreView: View {
                     copied = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
                 } label: {
-                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.iappayPurple)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                        .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                    GlyphView(copied ? .check : .copy, size: 17, color: .iappayAccent)
+                        .frame(width: 38, height: 38)
+                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
             }
@@ -139,21 +137,19 @@ public struct ExploreStoreView: View {
                                     .lineLimit(1)
                             }
                             Spacer(minLength: 6)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.iappayTextSecondary)
+                            GlyphView(.chevronRight, size: 14, color: .iappayTextMuted)
                         }
                         .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
                     if app.id != visibleSuggestions.last?.id {
-                        Divider().overlay(Color.iappayBorder.opacity(0.7))
+                        Divider().overlay(Color.iappayBorder.opacity(0.6))
                     }
                 }
             }
             .padding(.horizontal, 14)
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.iappayCard.opacity(0.85)))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.iappayBorder, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Color.iappayCard))
+            .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).stroke(Color.iappayBorder.opacity(0.7), lineWidth: 0.5))
         }
     }
 
@@ -172,10 +168,10 @@ public struct ExploreStoreView: View {
                             Text("\(app.artistName) • \(app.bundleId)").font(.system(size: 12)).foregroundColor(.iappayTextSecondary).lineLimit(1)
                         }
                         Spacer()
-                        Image(systemName: "chevron.right").foregroundColor(.iappayTextSecondary)
+                        GlyphView(.chevronRight, size: 14, color: .iappayTextMuted)
                     }
                     .padding(12)
-                    .referenceCard(cornerRadius: 18)
+                    .referenceCard(cornerRadius: 13)
                 }
                 .buttonStyle(.plain)
             }

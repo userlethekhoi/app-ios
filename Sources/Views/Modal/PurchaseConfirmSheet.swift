@@ -48,11 +48,10 @@ public struct PurchaseConfirmSheet: View {
                                 // App Icon
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.red)
+                                        .fill(Color.iappayCardRaised)
                                         .frame(width: 48, height: 48)
-                                    Image(systemName: item.appIconSystem)
-                                        .font(.system(size: 24))
-                                        .foregroundColor(.white)
+                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.iappayBorder, lineWidth: 0.5))
+                                    GlyphView(sf: item.appIconSystem, size: 24, color: .iappayTextSecondary)
                                 }
 
                                 VStack(alignment: .leading, spacing: 3) {
@@ -96,8 +95,8 @@ public struct PurchaseConfirmSheet: View {
                                     .foregroundColor(item.isFree ? .black : .white)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(item.isFree ? Color.iappayYellow : Color.iappayPurple)
-                                    .cornerRadius(16)
+                                    .background(item.isFree ? Color.iappayYellow : Color.iappayCardRaised)
+                                    .cornerRadius(10)
                             }
 
                             Divider().background(Color.iappayBorder)
@@ -158,8 +157,8 @@ public struct PurchaseConfirmSheet: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.iappayPurple)
-                            .cornerRadius(14)
+                            .background(Color.iappayAccent)
+                            .cornerRadius(12)
                     }
                     .disabled(isProcessing)
                 }

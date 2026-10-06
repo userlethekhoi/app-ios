@@ -23,9 +23,7 @@ public struct DiffView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     if bridge.snapshots.count < 2 {
                         VStack(spacing: 12) {
-                            Image(systemName: "square.split.2x1")
-                                .font(.system(size: 38))
-                                .foregroundColor(.textMuted)
+                            GlyphView(.splitColumns, size: 38, color: .iappayTextMuted)
                             Text("Cần tối thiểu 2 Snapshot")
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundColor(.textPrimary)

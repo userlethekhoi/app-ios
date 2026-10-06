@@ -18,9 +18,7 @@ public struct MainTabView: View {
             content
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            FloatingTabBar(selection: $selectedTab)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 6)
+            BottomTabBar(selection: $selectedTab)
         }
         .preferredColorScheme(.dark)
     }
@@ -54,48 +52,41 @@ private enum AppTab: Int, CaseIterable, Identifiable {
         }
     }
 
-    var icon: String {
+    var glyph: AppGlyph {
         switch self {
-        case .explore: return "magnifyingglass"
-        case .installed: return "square.stack.3d.up.fill"
-        case .library: return "folder"
-        case .settings: return "gearshape"
+        case .explore: return .compass
+        case .installed: return .layers
+        case .library: return .folder
+        case .settings: return .settings
         }
     }
 }
 
-private struct FloatingTabBar: View {
+private struct BottomTabBar: View {
     @Binding var selection: AppTab
 
     var body: some View {
-        HStack(spacing: 5) {
-            ForEach(AppTab.allCases) { tab in
-                Button { withAnimation(.easeInOut(duration: 0.2)) { selection = tab } } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 23, weight: .medium))
-                        Text(tab.title)
-                            .font(.system(size: 10, weight: .semibold))
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(Color.iappayBorder)
+                .frame(height: 0.5)
+            HStack(spacing: 0) {
+                ForEach(AppTab.allCases) { tab in
+                    Button { selection = tab } label: {
+                        VStack(spacing: 3) {
+                            GlyphView(tab.glyph, size: 22, color: selection == tab ? .iappayAccent : .iappayTextMuted)
+                            Text(tab.title)
+                                .font(.system(size: 10, weight: selection == tab ? .semibold : .regular))
+                        }
+                        .foregroundColor(selection == tab ? .iappayAccent : .iappayTextMuted)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 49)
+                        .contentShape(Rectangle())
                     }
-                    .foregroundColor(selection == tab ? .iappayPurple : .iappayTextSecondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 62)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(selection == tab ? Color.iappayPurple.opacity(0.24) : Color.clear)
-                    )
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .background(Color.iappaySurface.opacity(0.98))
         }
-        .padding(5)
-        .background(.ultraThinMaterial)
-        .background(Color.iappayCard.opacity(0.72))
-        .clipShape(Capsule(style: .continuous))
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(Color.white.opacity(0.34), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
     }
 }

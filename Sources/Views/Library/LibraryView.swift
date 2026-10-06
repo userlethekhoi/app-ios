@@ -23,9 +23,7 @@ public struct LibraryView: View {
                     SearchField("Tìm trong thư viện", text: $query)
                     if starredItems.isEmpty {
                         VStack(spacing: 13) {
-                            Image(systemName: "folder")
-                                .font(.system(size: 42, weight: .medium))
-                                .foregroundColor(.iappayPurple)
+                            GlyphView(.star, size: 42, color: .iappayTextMuted)
                             Text("Thư viện trống")
                                 .font(.system(size: 17, weight: .bold))
                                 .foregroundColor(.iappayTextPrimary)

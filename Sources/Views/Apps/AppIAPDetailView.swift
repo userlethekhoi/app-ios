@@ -98,14 +98,12 @@ public struct AppIAPDetailView: View {
     }
 
     private var topBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.iappayTextPrimary)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                    .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                GlyphView(.chevronLeft, size: 19, color: .iappayTextPrimary)
+                    .frame(width: 38, height: 38)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
             Text(appName)
@@ -114,21 +112,19 @@ public struct AppIAPDetailView: View {
                 .lineLimit(1)
             Spacer()
             Button { showingFilter = true } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.iappayTextPrimary)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                    .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                GlyphView(.sliders, size: 18, color: .iappayTextPrimary)
+                    .frame(width: 38, height: 38)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
             Button("Logs") { showingLogs = true }
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.iappayTextPrimary)
-                .padding(.horizontal, 15)
-                .frame(height: 44)
-                .background(Capsule().fill(Color.iappayCardRaised.opacity(0.9)))
-                .overlay(Capsule().stroke(Color.iappayBorder, lineWidth: 1))
+                .padding(.horizontal, 14)
+                .frame(height: 38)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
         }
     }
 
@@ -161,23 +157,29 @@ public struct AppIAPDetailView: View {
                         TweakBridge.shared.requestCatalogScan(bundleId: bundleId, productIds: ids, autoLaunch: false)
                     }
                 } label: {
-                    Label("Quét", systemImage: "bolt.badge.clock")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.iappayYellow)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(Color.iappayYellow.opacity(0.15)))
+                    HStack(spacing: 5) {
+                        GlyphView(.scan, size: 13, color: .iappayAccent)
+                        Text("Quét")
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.iappayAccent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.iappayAccent.opacity(0.15)))
                 }
                 .buttonStyle(.plain)
                 Button {
                     InstalledAppsScanner.shared.launchApp(bundleId: bundleId)
                 } label: {
-                    Label("Mở", systemImage: "arrow.up.forward.app")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.iappayPurple)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(Color.iappayPurple.opacity(0.15)))
+                    HStack(spacing: 5) {
+                        GlyphView(.externalLink, size: 13, color: .iappayAccent)
+                        Text("Mở")
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.iappayAccent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.iappayAccent.opacity(0.15)))
                 }
                 .buttonStyle(.plain)
             }
@@ -188,10 +190,10 @@ public struct AppIAPDetailView: View {
                 DetailMetric(value: "\(sourceItems.filter { $0.trialBadge != nil && !$0.isTrial }.count)", title: "GIẢM GIÁ", color: .iappayYellow)
             }
             .padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 17).fill(Color.iappayCardRaised.opacity(0.82)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
         }
         .padding(15)
-        .referenceCard(cornerRadius: 24)
+        .referenceCard(cornerRadius: 13)
     }
 
     private var filterPills: some View {
@@ -207,9 +209,7 @@ public struct AppIAPDetailView: View {
 
     private var emptyProducts: some View {
         VStack(spacing: 12) {
-            Image(systemName: "shippingbox")
-                .font(.system(size: 38))
-                .foregroundColor(.iappayPurple)
+            GlyphView(.box, size: 38, color: .iappayTextMuted)
             Text("Chưa có snapshot IAP")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.iappayTextPrimary)
@@ -251,7 +251,7 @@ private struct DetailMetric: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            Text(value).font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundColor(color)
+            Text(value).font(.system(size: 22, weight: .bold)).foregroundColor(color)
             Text(title).font(.system(size: 10, weight: .bold)).foregroundColor(.iappayTextSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -284,17 +284,19 @@ private struct DetailProductRow: View {
                 }
                 .buttonStyle(.plain)
                 Button(action: onStar) {
-                    Image(systemName: item.isStarred ? "star.fill" : "star")
-                        .foregroundColor(item.isStarred ? .iappayYellow : .iappayTextMuted)
+                    GlyphView(item.isStarred ? .starFilled : .star, size: 17, color: item.isStarred ? .iappayYellow : .iappayTextMuted)
                 }
                 .buttonStyle(.plain)
                 Button(action: onBuy) {
                     Text(item.formattedPrice)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(item.isFree ? .black : .white)
-                        .padding(.horizontal, 11)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(item.isFree ? Color.iappayYellow : (item.isTrial ? Color.iappayGreen : Color.iappayPurple)))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(item.isFree ? Color.iappayYellow : (item.isTrial ? Color.iappayGreen : Color.iappayCardRaised))
+                        )
                 }
                 .buttonStyle(.plain)
             }
@@ -310,9 +312,12 @@ private struct DetailProductRow: View {
                     detailLine("Product", item.productNumber ?? item.id)
                     detailLine("Store", item.storeCountry)
                     Button(action: onSpec) {
-                        Label("Xem đầy đủ & sao chép ID", systemImage: "doc.on.doc")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.iappayPurple)
+                        HStack(spacing: 6) {
+                            GlyphView(.copy, size: 14, color: .iappayAccent)
+                            Text("Xem đầy đủ & sao chép ID")
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.iappayAccent)
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 5)
@@ -322,7 +327,7 @@ private struct DetailProductRow: View {
                 .transition(.opacity)
             }
         }
-        .referenceCard(cornerRadius: 20)
+        .referenceCard(cornerRadius: 13)
     }
 
     private func detailLine(_ key: String, _ value: String) -> some View {

@@ -13,8 +13,8 @@ public struct DashboardView: View {
                     // Header Status
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("DINI PAY")
-                                .font(.system(size: 22, weight: .heavy, design: .rounded))
+                            Text("NAPPSTORE")
+                                .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.textPrimary)
                             Text("Apple StoreKit Official Inspector")
                                 .font(.system(size: 13, weight: .medium))
@@ -79,8 +79,8 @@ public struct DashboardView: View {
                     // Quick Actions
                     HStack(spacing: 12) {
                         Button(action: { bridge.loadAllSnapshots() }) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
+                            HStack(spacing: 6) {
+                                GlyphView(.refresh, size: 14, color: .white)
                                 Text("Đồng bộ Tweak")
                             }
                             .font(.system(size: 13, weight: .bold))
@@ -92,8 +92,8 @@ public struct DashboardView: View {
                         }
 
                         Button(action: { showingImportModal = true }) {
-                            HStack {
-                                Image(systemName: "square.and.arrow.down")
+                            HStack(spacing: 6) {
+                                GlyphView(.download, size: 14, color: .iappayTextPrimary)
                                 Text("Dán JSON")
                             }
                             .font(.system(size: 13, weight: .bold))
@@ -111,9 +111,7 @@ public struct DashboardView: View {
 
                     if bridge.snapshots.isEmpty {
                         VStack(spacing: 12) {
-                            Image(systemName: "tray")
-                                .font(.system(size: 38))
-                                .foregroundColor(.textMuted)
+                            GlyphView(.inbox, size: 38, color: .iappayTextMuted)
                             Text("Chưa có dữ liệu từ Tweak")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.textSecondary)
@@ -151,9 +149,7 @@ public struct DashboardView: View {
                                             BadgeTag("\(snapshot.totalProducts) IAP", bg: .accentBlue)
                                         }
 
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 12, weight: .bold))
-                                            .foregroundColor(.textMuted)
+                                        GlyphView(.chevronRight, size: 13, color: .iappayTextMuted)
                                     }
                                     .padding(14)
                                     .background(Color.darkCard)

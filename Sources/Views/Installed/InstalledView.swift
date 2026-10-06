@@ -56,7 +56,7 @@ public struct InstalledView: View {
                         HStack(spacing: 10) {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .tint(.iappayPurple)
+                                .tint(.iappayAccent)
                             Text(bridge.batchScanStatus)
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.iappayTextSecondary)
@@ -75,7 +75,7 @@ public struct InstalledView: View {
                         ProgressView("Đang quét ứng dụng…")
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 32)
-                            .tint(.iappayPurple)
+                            .tint(.iappayAccent)
                     } else if apps.isEmpty {
                         emptyState
                     } else {
@@ -135,12 +135,10 @@ public struct InstalledView: View {
                 Button {
                     showScanAllConfirm = true
                 } label: {
-                    Image(systemName: "bolt.badge.clock")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.iappayYellow)
-                        .frame(width: 42, height: 42)
-                        .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                        .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                    GlyphView(.scan, size: 18, color: .iappayAccent)
+                        .frame(width: 38, height: 38)
+                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
                 Button {
@@ -148,12 +146,10 @@ public struct InstalledView: View {
                     store.loadRealData()
                     bridge.loadAllSnapshots()
                 } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.iappayPurple)
-                        .frame(width: 42, height: 42)
-                        .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                        .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                    GlyphView(.refresh, size: 18, color: .iappayAccent)
+                        .frame(width: 38, height: 38)
+                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
                 }
                 .buttonStyle(.plain)
             }
@@ -166,9 +162,8 @@ public struct InstalledView: View {
             segmentButton("User (\(allApps.filter { !$0.isSystemApp }.count))", index: 0)
             segmentButton("System (\(allApps.filter(\.isSystemApp).count))", index: 1)
         }
-        .padding(3)
-        .background(Capsule().fill(Color.iappayCardRaised.opacity(0.92)))
-        .overlay(Capsule().stroke(Color.iappayBorder, lineWidth: 1))
+        .padding(2)
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.iappayCardRaised))
     }
 
     private var catalogFilterPills: some View {
@@ -188,11 +183,18 @@ public struct InstalledView: View {
             if index == 1 && !scanner.installedApps.contains(where: \.isSystemApp) { scanner.scanApps(includeSystem: true) }
         } label: {
             Text(title)
-                .font(.system(size: 15, weight: selectedSegment == index ? .bold : .medium))
+                .font(.system(size: 13, weight: selectedSegment == index ? .semibold : .regular))
                 .foregroundColor(selectedSegment == index ? .white : .iappayTextSecondary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 40)
-                .background(Capsule().fill(selectedSegment == index ? Color.iappayPurple.opacity(0.26) : Color.clear))
+                .frame(height: 30)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(selectedSegment == index ? Color.iappayBorder : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .stroke(Color.white.opacity(selectedSegment == index ? 0.08 : 0), lineWidth: 0.5)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -225,7 +227,7 @@ public struct InstalledView: View {
                     .lineLimit(1)
                 if let snapshot = bridge.latestSnapshot(for: app.bundleId) {
                     HStack(spacing: 6) {
-                        BadgeTag("\(snapshot.totalProducts) IAP", bg: .iappayPurple)
+                        BadgeTag("\(snapshot.totalProducts) IAP", bg: .iappayCardRaised)
                         if snapshot.totalFreeTrials > 0 {
                             BadgeTag("★ \(snapshot.totalFreeTrials) Trial", bg: .iappayGreen)
                         }
@@ -239,27 +241,21 @@ public struct InstalledView: View {
             Button {
                 scanApp(app)
             } label: {
-                Image(systemName: "bolt.badge.clock")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.iappayYellow)
-                    .frame(width: 34, height: 34)
-                    .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
-                    .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                GlyphView(.scan, size: 16, color: .iappayAccent)
+                    .frame(width: 32, height: 32)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.iappayCardRaised))
+                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.iappayBorder, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.iappayTextSecondary)
+            GlyphView(.chevronRight, size: 15, color: .iappayTextMuted)
         }
         .padding(14)
-        .referenceCard(cornerRadius: 22)
+        .referenceCard(cornerRadius: 13)
     }
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "square.stack.3d.up")
-                .font(.system(size: 36))
-                .foregroundColor(.iappayPurple)
+            GlyphView(.layers, size: 38, color: .iappayTextMuted)
             Text("Không tìm thấy ứng dụng")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.iappayTextPrimary)

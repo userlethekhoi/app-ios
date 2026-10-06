@@ -90,8 +90,7 @@ public struct ProductDetailListView: View {
                         showCopiedAlert = true
                     }
                 }) {
-                    Image(systemName: "doc.on.doc")
-                        .foregroundColor(.accentBlue)
+                    GlyphView(.copy, size: 17, color: .iappayAccent)
                 }
             }
         }
@@ -128,7 +127,7 @@ public struct ProductCardView: View {
                 Spacer()
 
                 Text(product.formattedBasePrice)
-                    .font(.system(size: 16, weight: .heavy, design: .rounded))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.successGreen)
             }
 
@@ -156,7 +155,7 @@ public struct ProductCardView: View {
                     onBuyTapped?(product)
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "bolt.fill")
+                        GlyphView(.zap, size: 11, color: .white)
                         Text("Mua")
                     }
                     .font(.system(size: 11, weight: .bold))

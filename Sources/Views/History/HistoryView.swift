@@ -14,8 +14,7 @@ public struct HistoryView: View {
             VStack(spacing: 0) {
                 // Search bar
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.textMuted)
+                    GlyphView(.search, size: 16, color: .iappayTextMuted)
                     TextField("Tìm theo bundle ID...", text: $searchText)
                         .foregroundColor(.textPrimary)
                 }
@@ -28,9 +27,7 @@ public struct HistoryView: View {
                 if bridge.snapshots.isEmpty {
                     Spacer()
                     VStack(spacing: 12) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 36))
-                            .foregroundColor(.textMuted)
+                        GlyphView(.history, size: 36, color: .iappayTextMuted)
                         Text("Chưa có lịch sử")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.textSecondary)
@@ -83,8 +80,7 @@ public struct HistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { bridge.loadAllSnapshots() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.accentBlue)
+                        GlyphView(.refresh, size: 17, color: .iappayAccent)
                     }
                 }
             }

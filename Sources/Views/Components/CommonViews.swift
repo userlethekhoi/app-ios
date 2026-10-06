@@ -4,7 +4,7 @@ public struct GlassCard<Content: View>: View {
     private let cornerRadius: CGFloat
     private let content: Content
 
-    public init(cornerRadius: CGFloat = 22, @ViewBuilder content: () -> Content) {
+    public init(cornerRadius: CGFloat = 13, @ViewBuilder content: () -> Content) {
         self.cornerRadius = cornerRadius
         self.content = content()
     }
@@ -14,12 +14,11 @@ public struct GlassCard<Content: View>: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.ultraThinMaterial.opacity(0.35))
-                    .background(Color.iappayCard.opacity(0.78))
+                    .fill(Color.iappayCard)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.iappayBorder.opacity(0.9), lineWidth: 1)
+                    .stroke(Color.iappayBorder.opacity(0.7), lineWidth: 0.5)
             )
     }
 }
@@ -37,28 +36,24 @@ public struct SearchField: View {
 
     public var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 19, weight: .medium))
-                .foregroundColor(.iappayTextSecondary)
+            GlyphView(.search, size: 17, color: .iappayTextMuted)
 
             TextField(placeholder, text: $text)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 16))
                 .foregroundColor(.iappayTextPrimary)
-                .tint(.iappayPurple)
+                .tint(.iappayAccent)
                 .onSubmit { onSubmit?() }
 
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.iappayTextMuted)
+                    GlyphView(.xCircle, size: 16, color: .iappayTextMuted)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .frame(height: 52)
-        .background(Capsule().fill(Color.iappayCardRaised.opacity(0.8)))
-        .overlay(Capsule().stroke(Color.iappayBorder, lineWidth: 1))
+        .padding(.horizontal, 14)
+        .frame(height: 40)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.iappayCardRaised))
     }
 }
 
@@ -98,16 +93,8 @@ public struct AppIconView: View {
     private var fallback: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [.iappayPurpleDark, .iappayCardRaised],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-            Image(systemName: systemName)
-                .font(.system(size: size * 0.42, weight: .semibold))
-                .foregroundColor(.white)
+                .fill(Color.iappayCardRaised)
+            GlyphView(sf: systemName, size: size * 0.48, color: .iappayTextSecondary)
         }
     }
 }
@@ -126,14 +113,18 @@ public struct FilterPill: View {
     public var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 14, weight: isSelected ? .bold : .semibold))
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(isSelected ? .white : .iappayTextSecondary)
-                .padding(.horizontal, 15)
-                .frame(height: 38)
+                .padding(.horizontal, 14)
+                .frame(height: 32)
                 .background(
-                    Capsule().fill(isSelected ? Color.iappayPurple : Color.iappayCardRaised.opacity(0.78))
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(isSelected ? Color.iappayAccent : Color.iappayCardRaised)
                 )
-                .overlay(Capsule().stroke(Color.iappayBorder.opacity(isSelected ? 0 : 0.9), lineWidth: 1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .stroke(Color.iappayBorder.opacity(isSelected ? 0 : 0.8), lineWidth: 0.5)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -179,21 +170,20 @@ public struct MetricCard: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
                 Text(title.uppercased())
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(.iappayTextMuted)
                 Spacer()
-                Image(systemName: systemImage)
-                    .foregroundColor(accentColor)
+                GlyphView(sf: systemImage, size: 16, color: accentColor)
             }
             Text(value)
-                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.iappayTextPrimary)
             Text(subtitle)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.iappayTextSecondary)
         }
         .padding(14)
-        .referenceCard(cornerRadius: 16)
+        .referenceCard(cornerRadius: 13)
     }
 }
 
@@ -214,8 +204,8 @@ public struct SectionHeaderView: View {
                 .tracking(0.4)
             if let count {
                 Text("\(count)")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.iappayPurple)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.iappayAccent)
             }
             Spacer()
         }
@@ -250,14 +240,17 @@ public struct IAPItemRow: View {
                 }
                 Spacer(minLength: 6)
                 Text(item.formattedPrice)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(item.isFree ? .black : .white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(item.isFree ? Color.iappayYellow : (item.isTrial ? Color.iappayGreen : Color.iappayPurple)))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(item.isFree ? Color.iappayYellow : (item.isTrial ? Color.iappayGreen : Color.iappayCardRaised))
+                    )
             }
             .padding(12)
-            .referenceCard(cornerRadius: 18)
+            .referenceCard(cornerRadius: 13)
         }
         .buttonStyle(.plain)
     }

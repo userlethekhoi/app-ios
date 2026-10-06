@@ -11,9 +11,7 @@ public struct LogsView: View {
 
                 if store.logs.isEmpty {
                     VStack(spacing: 12) {
-                        Image(systemName: "terminal")
-                            .font(.system(size: 40))
-                            .foregroundColor(.iappayTextMuted)
+                        GlyphView(.terminal, size: 40, color: .iappayTextMuted)
                         Text("Chưa có logs giao dịch")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.iappayTextSecondary)
@@ -30,7 +28,7 @@ public struct LogsView: View {
 
                                         Text(log.tag)
                                             .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.iappayPurple)
+                                            .foregroundColor(.iappayAccent)
 
                                         Spacer()
 
@@ -72,8 +70,7 @@ public struct LogsView: View {
                         let text = store.logs.map { "[\($0.formattedTime)] [\($0.tag)] \($0.message)" }.joined(separator: "\n")
                         UIPasteboard.general.string = text
                     }) {
-                        Image(systemName: "doc.on.doc")
-                            .foregroundColor(.iappayPurple)
+                        GlyphView(.copy, size: 17, color: .iappayAccent)
                     }
                 }
             }

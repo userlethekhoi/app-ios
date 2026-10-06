@@ -24,7 +24,7 @@ public struct IAPSpecSheet: View {
                         isPresented = false
                     }
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.iappayPurple)
+                    .foregroundColor(.iappayAccent)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 18)
@@ -39,9 +39,7 @@ public struct IAPSpecSheet: View {
                                     .fill(Color.iappayCard)
                                     .frame(width: 50, height: 50)
                                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.iappayBorder, lineWidth: 1))
-                                Image(systemName: item.appIconSystem)
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.iappayPurple)
+                                GlyphView(sf: item.appIconSystem, size: 24, color: .iappayAccent)
                             }
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -60,8 +58,8 @@ public struct IAPSpecSheet: View {
                                 .foregroundColor(item.isFree ? .black : .white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(item.isFree ? Color.iappayYellow : Color.iappayPurple)
-                                .cornerRadius(12)
+                                .background(item.isFree ? Color.iappayYellow : Color.iappayCardRaised)
+                                .cornerRadius(8)
                         }
                         .padding(14)
                         .background(Color.iappayCard)
@@ -117,12 +115,12 @@ public struct IAPSpecSheet: View {
                                 copied = false
                             }
                         }) {
-                            HStack {
-                                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                            HStack(spacing: 7) {
+                                GlyphView(copied ? .check : .copy, size: 15, color: .iappayAccent)
                                 Text(copied ? "Đã sao chép ID gói!" : "Sao chép ID gói")
                                     .font(.system(size: 14, weight: .semibold))
                             }
-                            .foregroundColor(.iappayPurple)
+                            .foregroundColor(.iappayAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(Color.iappayCard)
@@ -135,16 +133,16 @@ public struct IAPSpecSheet: View {
                             isPresented = false
                             onBuyTapped()
                         }) {
-                            HStack {
-                                Image(systemName: "bolt.fill")
+                            HStack(spacing: 7) {
+                                GlyphView(.zap, size: 15, color: .white)
                                 Text("Mở Sheet Kích Hoạt (\(item.formattedPrice))")
                                     .font(.system(size: 15, weight: .bold))
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.iappayPurple)
-                            .cornerRadius(14)
+                            .background(Color.iappayAccent)
+                            .cornerRadius(12)
                         }
                     }
                     .padding(.horizontal, 16)

@@ -31,6 +31,7 @@
 		000000000000000000200016 /* Views/Modal/IAPSpecSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000100016 /* Views/Modal/IAPSpecSheet.swift */; };
 		000000000000000000200017 /* Views/Modal/PurchaseConfirmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000100017 /* Views/Modal/PurchaseConfirmSheet.swift */; };
 		000000000000000000200018 /* Views/Settings/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000100018 /* Views/Settings/SettingsView.swift */; };
+		000000000000000000200019 /* Views/Components/VectorIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000100019 /* Views/Components/VectorIcons.swift */; };
 		D00000000000000000000001 /* AppIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 300000000000000000000004 /* AppIcon.png */; };
 /* End PBXBuildFile section */
 
@@ -59,6 +60,7 @@
 		000000000000000000100016 /* Views/Modal/IAPSpecSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Modal/IAPSpecSheet.swift; sourceTree = "<group>"; };
 		000000000000000000100017 /* Views/Modal/PurchaseConfirmSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Modal/PurchaseConfirmSheet.swift; sourceTree = "<group>"; };
 		000000000000000000100018 /* Views/Settings/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Settings/SettingsView.swift; sourceTree = "<group>"; };
+		000000000000000000100019 /* Views/Components/VectorIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/VectorIcons.swift; sourceTree = "<group>"; };
 		300000000000000000000001 /* NappStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NappStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		300000000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		300000000000000000000003 /* entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 				000000000000000000100016 /* Views/Modal/IAPSpecSheet.swift */,
 				000000000000000000100017 /* Views/Modal/PurchaseConfirmSheet.swift */,
 				000000000000000000100018 /* Views/Settings/SettingsView.swift */,
+				000000000000000000100019 /* Views/Components/VectorIcons.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -221,6 +224,7 @@
 				000000000000000000200016 /* Views/Modal/IAPSpecSheet.swift in Sources */,
 				000000000000000000200017 /* Views/Modal/PurchaseConfirmSheet.swift in Sources */,
 				000000000000000000200018 /* Views/Settings/SettingsView.swift in Sources */,
+				000000000000000000200019 /* Views/Components/VectorIcons.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

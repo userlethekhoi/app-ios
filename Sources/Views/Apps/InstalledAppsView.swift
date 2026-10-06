@@ -21,15 +21,15 @@ public struct InstalledAppsView: View {
                 // Search & Filter Bar
                 VStack(spacing: 10) {
                     HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.textMuted)
+                        GlyphView(.search, size: 16, color: .iappayTextMuted)
                         TextField("Tìm app theo tên, bundle ID...", text: $searchText)
                             .foregroundColor(.textPrimary)
+                            .tint(.iappayAccent)
                     }
                     .padding(10)
                     .background(Color.darkCard)
                     .cornerRadius(8)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.darkBorder, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.darkBorder, lineWidth: 0.5))
 
                     HStack {
                         Toggle("Bao gồm app hệ thống", isOn: $includeSystemApps)
@@ -42,8 +42,7 @@ public struct InstalledAppsView: View {
                         Spacer()
 
                         Button(action: { scanner.scanApps(includeSystem: includeSystemApps) }) {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundColor(.accentBlue)
+                            GlyphView(.refresh, size: 17, color: .iappayAccent)
                         }
                     }
                 }
@@ -94,9 +93,8 @@ struct InstalledAppRow: View {
                     .fill(Color.darkCard)
                     .frame(width: 44, height: 44)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.darkBorder, lineWidth: 1))
-                Image(systemName: app.isSystemApp ? "gear" : "app.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(app.isSystemApp ? .textMuted : .accentBlue)
+                GlyphView(app.isSystemApp ? .settings : .grid, size: 20,
+                          color: app.isSystemApp ? .iappayTextMuted : .iappayAccent)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -128,8 +126,7 @@ struct InstalledAppRow: View {
                 InstalledAppsScanner.shared.launchApp(bundleId: app.bundleId)
             }) {
                 HStack(spacing: 4) {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 10))
+                    GlyphView(.play, size: 10, color: .white)
                     Text("Mở App")
                         .font(.system(size: 11, weight: .bold))
                 }

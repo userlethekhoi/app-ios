@@ -25,7 +25,7 @@ public struct SettingsView: View {
                         .frame(height: 46)
 
                     settingsSection("Giao diện") {
-                        settingsRow(icon: "paintbrush.fill", color: .iappayPurple, title: "Chế độ") {
+                        settingsRow(icon: "moon", color: .iappayAccent, title: "Chế độ") {
                             Picker("", selection: $appearanceMode) {
                                 Text("Tự động").tag("Tự động")
                                 Text("Sáng").tag("Sáng")
@@ -42,7 +42,7 @@ public struct SettingsView: View {
 
                     settingsSection("Cửa hàng & quốc gia") {
                         Button { showingCountryPicker = true } label: {
-                            settingsRowContent(icon: "globe", color: .iappayPurple, title: "Quốc gia App Store", value: appStoreCountry, chevron: true)
+                            settingsRowContent(icon: "globe", color: .iappayAccent, title: "Quốc gia App Store", value: appStoreCountry, chevron: true)
                         }
                         .buttonStyle(.plain)
                     }
@@ -70,7 +70,7 @@ public struct SettingsView: View {
                         .padding(.horizontal, 4)
 
                     settingsSection("Dữ liệu & bộ nhớ tạm") {
-                        settingsRow(icon: "wand.and.stars", color: .iappayOrange, title: "No-Cache Mode") {
+                        settingsRow(icon: "archive", color: .iappayOrange, title: "No-Cache Mode") {
                             Toggle("", isOn: $noCacheMode)
                                 .labelsHidden()
                                 .tint(.iappayGreen)
@@ -97,7 +97,7 @@ public struct SettingsView: View {
                         .buttonStyle(.plain)
                         Divider().overlay(Color.iappayBorder)
                         Button { alertMessage = "Cache hình ảnh do URLSession/AsyncImage quản lý theo chính sách hệ thống." } label: {
-                            settingsRowContent(icon: "photo.fill", color: .iappayPurple, title: "Xóa cache hình ảnh", value: nil, titleColor: .iappayYellow)
+                            settingsRowContent(icon: "image", color: .iappayAccent, title: "Xóa cache hình ảnh", value: nil, titleColor: .iappayYellow)
                         }
                         .buttonStyle(.plain)
                     }
@@ -107,9 +107,9 @@ public struct SettingsView: View {
                         .padding(.horizontal, 4)
 
                     settingsSection("Thông tin phát triển") {
-                        settingsRowContent(icon: "app.fill", color: .iappayCyan, title: "NappStore", value: "v1.0.0 (build 2026)")
+                        settingsRowContent(icon: "grid", color: .iappayCyan, title: "NappStore", value: "v1.0.0 (build 2026)")
                         Divider().overlay(Color.iappayBorder)
-                        settingsRowContent(icon: "person.2.fill", color: .iappayPurple, title: "Đội ngũ", value: "ctdoteam")
+                        settingsRowContent(icon: "users", color: .iappayAccent, title: "Đội ngũ", value: "ctdoteam")
                         Divider().overlay(Color.iappayBorder)
                         settingsRowContent(icon: "chevron.left.forwardslash.chevron.right", color: .iappayGreen, title: "Lập trình viên", value: "dothanh1110")
                     }
@@ -145,38 +145,36 @@ public struct SettingsView: View {
             Text(title).sectionLabelStyle()
             VStack(spacing: 0) { content() }
                 .padding(.horizontal, 14)
-                .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.iappayCard.opacity(0.88)))
-                .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.iappayBorder, lineWidth: 1))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.iappayCard))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.iappayBorder.opacity(0.7), lineWidth: 0.5))
         }
+    }
+
+    private func settingsIcon(_ icon: String, color: Color) -> some View {
+        GlyphView(sf: icon, size: 16, color: .white)
+            .frame(width: 30, height: 30)
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(color))
     }
 
     private func settingsRow<Accessory: View>(icon: String, color: Color, title: String, @ViewBuilder accessory: () -> Accessory) -> some View {
         HStack(spacing: 13) {
-            Image(systemName: icon)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 38, height: 38)
-                .background(RoundedRectangle(cornerRadius: 11).fill(color))
-            Text(title).font(.system(size: 16, weight: .semibold)).foregroundColor(.iappayTextPrimary)
+            settingsIcon(icon, color: color)
+            Text(title).font(.system(size: 16)).foregroundColor(.iappayTextPrimary)
             Spacer()
             accessory()
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 9)
     }
 
     private func settingsRowContent(icon: String, color: Color, title: String, value: String? = nil, chevron: Bool = false, titleColor: Color = .iappayTextPrimary) -> some View {
         HStack(spacing: 13) {
-            Image(systemName: icon)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 38, height: 38)
-                .background(RoundedRectangle(cornerRadius: 11).fill(color))
-            Text(title).font(.system(size: 16, weight: .semibold)).foregroundColor(titleColor)
+            settingsIcon(icon, color: color)
+            Text(title).font(.system(size: 16)).foregroundColor(titleColor)
             Spacer()
-            if let value { Text(value).font(.system(size: 15, weight: .medium)).foregroundColor(.iappayTextSecondary).lineLimit(1) }
-            if chevron { Image(systemName: "chevron.right").foregroundColor(.iappayTextSecondary) }
+            if let value { Text(value).font(.system(size: 15)).foregroundColor(.iappayTextSecondary).lineLimit(1) }
+            if chevron { GlyphView(.chevronRight, size: 13, color: .iappayTextMuted) }
         }
-        .padding(.vertical, 11)
+        .padding(.vertical, 9)
     }
 
     private static let dateFormatter: DateFormatter = {
