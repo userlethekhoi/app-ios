@@ -2,9 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- ldid ad-hoc fallback in build_ipa.sh: such an IPA can only ever be
-	     installed by TrollStore, so it must carry the unsandboxed
-	     entitlements for the IAPCheck bridge to work. -->
+	<!-- TrollStore entitlements: the binary must carry these at sign time,
+	     TrollStore does not grant them implicitly. Without no-sandbox the
+	     app can only write inside its own container and the companion
+	     tweak can never see the pending_scan/pending_buy bridge files. -->
 	<key>platform-application</key>
 	<true/>
 	<key>com.apple.private.security.no-sandbox</key>

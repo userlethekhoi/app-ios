@@ -11,10 +11,12 @@ APPLICATION_NAME = NappStore
 NappStore_FILES = $(shell find Sources -name '*.swift')
 NappStore_FRAMEWORKS = UIKit SwiftUI Foundation CoreServices StoreKit
 NappStore_RESOURCE_FILES = Info.plist AppIcon.png CatalogData
-# The development IPA is produced by build_ipa.sh. Keep this legacy Theos
-# target free of private entitlements so an accidental `make` cannot produce
-# the invalid no-sandbox/platform-application signature.
-NappStore_CODESIGN_FLAGS =
+# TrollStore / jailbreak installs need the binary to carry the no-sandbox and
+# platform-application entitlements or the app stays inside its container and
+# cannot reach the shared IAPCheck bridge directories. The development IPA
+# path (build_ipa.sh) still strips them because real Apple Development
+# profiles refuse those keys.
+NappStore_CODESIGN_FLAGS = -S$(THEOS_PROJECT_DIR)/entitlements.tipa.plist
 
 
 include $(THEOS_MAKE_PATH)/application.mk
