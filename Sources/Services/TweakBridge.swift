@@ -13,11 +13,28 @@ public final class TweakBridge: ObservableObject {
     @Published public private(set) var snapshots: [ScanSnapshot] = []
     @Published public private(set) var lastSyncDate: Date?
     @Published public private(set) var lastBridgeMessage = "Chưa kết nối bridge"
+    @Published public private(set) var isBatchScanning = false
+    @Published public private(set) var batchScanStatus = ""
 
     private let fileManager = FileManager.default
+    private var pendingLaunchQueue: [String] = []
 
     public init() {
         loadAllSnapshots()
+        // The companion tweak posts this Darwin notification right after it
+        // persists a snapshot, so the catalog refreshes without a manual pull.
+        let callback: CFNotificationCallback = { _, _, _, _, _ in
+            TweakBridge.shared.loadAllSnapshots()
+            StoreKitService.shared.loadRealData()
+        }
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            callback,
+            "com.adr.checkiap.snapshot" as CFString,
+            nil,
+            .deliverImmediately
+        )
     }
 
     public var searchPaths: [URL] {
@@ -42,7 +59,7 @@ public final class TweakBridge: ObservableObject {
             for folder in self.searchPaths {
                 guard self.fileManager.fileExists(atPath: folder.path),
                       let files = try? self.fileManager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { continue }
-                for file in files where file.pathExtension.lowercased() == "json" && !file.lastPathComponent.contains("pending_buy") {
+                for file in files where file.pathExtension.lowercased() == "json" && !file.lastPathComponent.lowercased().hasPrefix("pending_") {
                     guard let data = try? Data(contentsOf: file),
                           let snapshot = self.decodeSnapshot(data: data, file: file) else { continue }
                     if seen.insert(snapshot.id).inserted { found.append(snapshot) }
@@ -124,6 +141,164 @@ public final class TweakBridge: ObservableObject {
         }
     }
 
+    // MARK: Scan requests (pending_scan.json)
+
+    /// The latest snapshot captured for one app, or nil when the tweak has
+    /// not written one yet.
+    public func latestSnapshot(for bundleId: String) -> ScanSnapshot? {
+        snapshots.filter { $0.bundleId == bundleId }.max { $0.timestamp < $1.timestamp }
+    }
+
+    /// Queue a scan entry addressed to the target app. The tweak inside that
+    /// app refetches the listed product ids (merged with ids harvested from
+    /// its local receipt) the next time it is running — or immediately via
+    /// the Darwin notification if it is already running.
+    @discardableResult
+    public func requestCatalogScan(bundleId: String, productIds: [String] = [], autoLaunch: Bool = true) -> Bool {
+        let entry: [String: Any] = ["bundleId": bundleId, "productIds": productIds]
+        guard writePendingScan(entries: [entry]) else {
+            DispatchQueue.main.async { self.lastBridgeMessage = "Chưa ghi được lệnh quét vào bridge" }
+            return false
+        }
+        postScanNotification()
+        DispatchQueue.main.async { self.lastBridgeMessage = "Đã xếp lệnh quét cho \(bundleId)" }
+        if autoLaunch { InstalledAppsScanner.shared.launchApp(bundleId: bundleId) }
+        return true
+    }
+
+    /// Queue a scan entry addressed to this app with a `proxyFor` bundle.
+    /// While the entry is pending the tweak inside storekitd spoofs the
+    /// client's bundle id, so this app's own SKProductsRequest resolves the
+    /// target's catalogue — no need to launch the target app at all.
+    @discardableResult
+    public func requestProxyScan(bundleId: String, productIds: [String]) -> Bool {
+        guard !productIds.isEmpty,
+              let ownBundle = Bundle.main.bundleIdentifier else { return false }
+        let entry: [String: Any] = ["bundleId": ownBundle, "proxyFor": bundleId, "productIds": productIds]
+        guard writePendingScan(entries: [entry]) else {
+            DispatchQueue.main.async { self.lastBridgeMessage = "Chưa ghi được lệnh proxy scan vào bridge" }
+            return false
+        }
+        postScanNotification()
+        DispatchQueue.main.async { self.lastBridgeMessage = "Đang quét catalog \(bundleId) qua bridge" }
+        return true
+    }
+
+    /// Scan every supplied app in one pass:
+    ///  - apps whose product ids are already known are queued as proxy scans
+    ///    which this app resolves immediately through the daemon spoof;
+    ///  - every app also gets a direct entry consumed by the tweak inside it
+    ///    on next launch;
+    ///  - `launchSequentially` additionally opens each app with a short delay
+    ///    so its entry is consumed right away.
+    public func requestWholeDeviceScan(apps: [InstalledAppInfo], launchSequentially: Bool) {
+        let ownBundle = Bundle.main.bundleIdentifier ?? ""
+        var entries: [[String: Any]] = []
+        var launchQueue: [String] = []
+        for app in apps {
+            let ids = StoreKitService.shared.catalogProductIds(for: app.bundleId)
+            if !ids.isEmpty, !ownBundle.isEmpty, app.bundleId != ownBundle {
+                entries.append(["bundleId": ownBundle, "proxyFor": app.bundleId, "productIds": ids])
+            }
+            entries.append(["bundleId": app.bundleId, "productIds": ids])
+            if ids.isEmpty { launchQueue.append(app.bundleId) }
+        }
+        guard !entries.isEmpty else { return }
+        guard writePendingScan(entries: entries) else {
+            DispatchQueue.main.async { self.lastBridgeMessage = "Chưa ghi được hàng đợi quét vào bridge" }
+            return
+        }
+        postScanNotification()
+        DispatchQueue.main.async {
+            self.isBatchScanning = true
+            self.batchScanStatus = "Đã gửi \(entries.count) lệnh quét"
+        }
+        if launchSequentially {
+            launchQueueSerially(launchQueue)
+        } else {
+            DispatchQueue.main.async { self.isBatchScanning = false }
+        }
+    }
+
+    // MARK: Pending scan file plumbing
+
+    private func writePendingScan(entries: [[String: Any]]) -> Bool {
+        var merged = pendingScanEntries()
+        for entry in entries {
+            let bundle = entry["bundleId"] as? String
+            let proxy = entry["proxyFor"] as? String
+            if let index = merged.firstIndex(where: {
+                ($0["bundleId"] as? String) == bundle && ($0["proxyFor"] as? String) == proxy
+            }) {
+                merged[index] = entry
+            } else {
+                merged.append(entry)
+            }
+        }
+        let payload: [String: Any] = [
+            "mode": "scan",
+            "timestamp": Int(Date().timeIntervalSince1970),
+            "requests": merged
+        ]
+        var succeeded = false
+        for folder in searchPaths {
+            do {
+                try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+                let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+                try data.write(to: folder.appendingPathComponent("pending_scan.json"), options: .atomic)
+                succeeded = true
+            } catch {
+                continue
+            }
+        }
+        return succeeded
+    }
+
+    private func pendingScanEntries() -> [[String: Any]] {
+        for folder in searchPaths {
+            let url = folder.appendingPathComponent("pending_scan.json")
+            guard let data = try? Data(contentsOf: url),
+                  let object = try? JSONSerialization.jsonObject(with: data),
+                  let dictionary = object as? [String: Any] else { continue }
+            if let requests = dictionary["requests"] as? [[String: Any]] { return requests }
+            if dictionary["bundleId"] != nil { return [dictionary] }
+        }
+        return []
+    }
+
+    private func postScanNotification() {
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName("com.adr.checkiap.scan" as CFString),
+            nil, nil, true
+        )
+    }
+
+    private func launchQueueSerially(_ bundles: [String]) {
+        pendingLaunchQueue = bundles
+        launchNextQueuedApp()
+    }
+
+    private func launchNextQueuedApp() {
+        guard !pendingLaunchQueue.isEmpty else {
+            DispatchQueue.main.async {
+                self.isBatchScanning = false
+                self.batchScanStatus = "Đã mở xong hàng đợi app"
+            }
+            return
+        }
+        let bundle = pendingLaunchQueue.removeFirst()
+        DispatchQueue.main.async {
+            self.batchScanStatus = "Đang mở \(bundle) — còn \(self.pendingLaunchQueue.count)"
+        }
+        InstalledAppsScanner.shared.launchApp(bundleId: bundle)
+        // Give each app a few seconds: the tweak hooks its launch, consumes
+        // the queued entry and captures whatever catalog it can resolve.
+        DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+            self.launchNextQueuedApp()
+        }
+    }
+
     public func deleteSnapshot(_ snapshot: ScanSnapshot) {
         snapshots.removeAll { $0.id == snapshot.id }
         for folder in searchPaths {
@@ -197,9 +372,13 @@ public final class TweakBridge: ObservableObject {
     }
 
     private func bundleIDFromFilename(_ file: URL) -> String? {
-        let name = file.deletingPathExtension().lastPathComponent
-        let candidate = name.hasSuffix("_iap") ? String(name.dropLast(4)) : name
-        return candidate.contains(".") ? candidate : nil
+        var name = file.deletingPathExtension().lastPathComponent
+        if name.hasSuffix("_iap") { name = String(name.dropLast(4)) }
+        // `<bundleId>_<epoch>.json` exports written by saveSnapshotLocally.
+        if let range = name.range(of: #"_\d{9,}(\.\d+)?$"#, options: .regularExpression) {
+            name.removeSubrange(range)
+        }
+        return name.contains(".") ? name : nil
     }
 
     private func bridgeString(_ dictionary: [String: Any], keys: [String]) -> String? {

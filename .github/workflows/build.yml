@@ -46,6 +46,10 @@ jobs:
         run: |
           make clean package FINALPACKAGE=1
 
+      - name: Build Companion Tweak (DEB)
+        run: |
+          make -C tweak clean package FINALPACKAGE=1
+
       - name: Package TIPA / IPA from Theos App
         run: |
           mkdir -p build/Payload

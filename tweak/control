@@ -1,0 +1,9 @@
+Package: com.adr.checkiap.tweak
+Name: IAPCheck iOS
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: Intercept StoreKit IAP requests system-wide, uncover hidden free trials, intro discounts, and pricing tiers. Companion tweak for NappStore.
+Maintainer: ctdoteam
+Author: dothanh1110
+Section: Tweaks
+Depends: mobilesubstrate

@@ -3,16 +3,30 @@ import SwiftUI
 public struct InstalledView: View {
     @ObservedObject private var scanner = InstalledAppsScanner.shared
     @ObservedObject private var store = StoreKitService.shared
+    @ObservedObject private var bridge = TweakBridge.shared
 
     @State private var query = ""
     @State private var selectedSegment = 0
+    @State private var catalogFilter = 0
     @State private var selectedApp: InstalledAppInfo?
     @State private var showingLogs = false
+    @State private var showScanAllConfirm = false
 
     private var apps: [InstalledAppInfo] {
         allApps.filter { app in
             let segmentMatches = selectedSegment == 0 ? !app.isSystemApp : app.isSystemApp
             guard segmentMatches else { return false }
+            let snapshot = bridge.latestSnapshot(for: app.bundleId)
+            switch catalogFilter {
+            case 1:
+                guard (snapshot?.totalFreeTrials ?? 0) > 0 else { return false }
+            case 2:
+                guard (snapshot?.totalProducts ?? 0) > 0 else { return false }
+            case 3:
+                guard snapshot == nil else { return false }
+            default:
+                break
+            }
             guard !query.isEmpty else { return true }
             return app.appName.localizedCaseInsensitiveContains(query) || app.bundleId.localizedCaseInsensitiveContains(query)
         }
@@ -26,6 +40,11 @@ public struct InstalledView: View {
         return byBundle.values.sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
     }
 
+    private var userApps: [InstalledAppInfo] { allApps.filter { !$0.isSystemApp } }
+    private var trialAppsCount: Int { allApps.filter { (bridge.latestSnapshot(for: $0.bundleId)?.totalFreeTrials ?? 0) > 0 }.count }
+    private var iapAppsCount: Int { allApps.filter { (bridge.latestSnapshot(for: $0.bundleId)?.totalProducts ?? 0) > 0 }.count }
+    private var unscannedCount: Int { allApps.filter { bridge.latestSnapshot(for: $0.bundleId) == nil }.count }
+
     public init() {}
 
     public var body: some View {
@@ -33,8 +52,24 @@ public struct InstalledView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
                     header
+                    if bridge.isBatchScanning {
+                        HStack(spacing: 10) {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(.iappayPurple)
+                            Text(bridge.batchScanStatus)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.iappayTextSecondary)
+                                .lineLimit(1)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .referenceCard(cornerRadius: 14)
+                    }
                     SearchField("Filter by name or bundle ID", text: $query)
                     segmentControl
+                    catalogFilterPills
 
                     if scanner.isScanning {
                         ProgressView("Đang quét ứng dụng…")
@@ -71,9 +106,21 @@ public struct InstalledView: View {
                 )
             }
             .sheet(isPresented: $showingLogs) { LogsView() }
+            .confirmationDialog("Quét IAP toàn bộ app?", isPresented: $showScanAllConfirm, titleVisibility: .visible) {
+                Button("Quét \(userApps.count) app (mở lần lượt app chưa rõ ID)") {
+                    bridge.requestWholeDeviceScan(apps: userApps, launchSequentially: true)
+                }
+                Button("Chỉ xếp lệnh quét (không mở app)") {
+                    bridge.requestWholeDeviceScan(apps: userApps, launchSequentially: false)
+                }
+                Button("Hủy", role: .cancel) {}
+            } message: {
+                Text("Cần tweak IAPCheck đang hoạt động. App có product ID đã biết được quét ngay qua daemon; app còn lại sẽ được tweak bắt catalog khi chạy.")
+            }
             .onAppear {
                 if scanner.installedApps.isEmpty { scanner.scanApps(includeSystem: selectedSegment == 1) }
                 if store.items.isEmpty { store.loadRealData() }
+                bridge.loadAllSnapshots()
             }
         }
     }
@@ -83,11 +130,23 @@ public struct InstalledView: View {
             Text("Đã cài đặt")
                 .font(.system(size: 23, weight: .bold))
                 .foregroundColor(.iappayTextPrimary)
-            HStack {
+            HStack(spacing: 10) {
                 Spacer()
+                Button {
+                    showScanAllConfirm = true
+                } label: {
+                    Image(systemName: "bolt.badge.clock")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.iappayYellow)
+                        .frame(width: 42, height: 42)
+                        .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
+                        .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
                 Button {
                     scanner.scanApps(includeSystem: selectedSegment == 1)
                     store.loadRealData()
+                    bridge.loadAllSnapshots()
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 17, weight: .semibold))
@@ -112,6 +171,17 @@ public struct InstalledView: View {
         .overlay(Capsule().stroke(Color.iappayBorder, lineWidth: 1))
     }
 
+    private var catalogFilterPills: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterPill(title: "Tất cả", isSelected: catalogFilter == 0) { catalogFilter = 0 }
+                FilterPill(title: "★ Có trial (\(trialAppsCount))", isSelected: catalogFilter == 1) { catalogFilter = 1 }
+                FilterPill(title: "Có IAP (\(iapAppsCount))", isSelected: catalogFilter == 2) { catalogFilter = 2 }
+                FilterPill(title: "Chưa quét (\(unscannedCount))", isSelected: catalogFilter == 3) { catalogFilter = 3 }
+            }
+        }
+    }
+
     private func segmentButton(_ title: String, index: Int) -> some View {
         Button {
             selectedSegment = index
@@ -127,6 +197,20 @@ public struct InstalledView: View {
         .buttonStyle(.plain)
     }
 
+    private func scanApp(_ app: InstalledAppInfo) {
+        let ids = store.catalogProductIds(for: app.bundleId)
+        if ids.isEmpty {
+            // No seed ids: let the tweak inside the target app harvest its
+            // receipt and whatever the app itself queries after launch.
+            bridge.requestCatalogScan(bundleId: app.bundleId, autoLaunch: true)
+        } else {
+            // Known ids: resolve the catalog through the daemon spoof right
+            // away, and still queue the direct entry for the app's next run.
+            bridge.requestProxyScan(bundleId: app.bundleId, productIds: ids)
+            bridge.requestCatalogScan(bundleId: app.bundleId, productIds: ids, autoLaunch: false)
+        }
+    }
+
     private func appRow(_ app: InstalledAppInfo) -> some View {
         HStack(spacing: 13) {
             AppIconView(systemName: icon(for: app.bundleId), size: 52)
@@ -139,8 +223,30 @@ public struct InstalledView: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.iappayTextSecondary)
                     .lineLimit(1)
+                if let snapshot = bridge.latestSnapshot(for: app.bundleId) {
+                    HStack(spacing: 6) {
+                        BadgeTag("\(snapshot.totalProducts) IAP", bg: .iappayPurple)
+                        if snapshot.totalFreeTrials > 0 {
+                            BadgeTag("★ \(snapshot.totalFreeTrials) Trial", bg: .iappayGreen)
+                        }
+                        if snapshot.totalDiscounts > 0 {
+                            BadgeTag("\(snapshot.totalDiscounts) Giảm giá", bg: .iappayYellow, fg: .black)
+                        }
+                    }
+                }
             }
             Spacer()
+            Button {
+                scanApp(app)
+            } label: {
+                Image(systemName: "bolt.badge.clock")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.iappayYellow)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color.iappayCardRaised.opacity(0.9)))
+                    .overlay(Circle().stroke(Color.iappayBorder, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
             Image(systemName: "chevron.right")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.iappayTextSecondary)
@@ -157,7 +263,7 @@ public struct InstalledView: View {
             Text("Không tìm thấy ứng dụng")
                 .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.iappayTextPrimary)
-            Text("Cho phép companion bridge ghi snapshot hoặc thêm app bằng Bundle ID để xem dữ liệu IAP.")
+            Text("Cài tweak IAPCheck để bắt catalog StoreKit, sau đó nhấn nút tia sét để quét hoặc mở app đích để tweak tự ghi snapshot.")
                 .font(.system(size: 13))
                 .foregroundColor(.iappayTextSecondary)
                 .multilineTextAlignment(.center)

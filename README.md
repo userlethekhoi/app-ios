@@ -4,6 +4,37 @@ SwiftUI recreation of the supplied NappStore screens: Explore, Installed,
 Library, Settings, product filters, product details, logs, and purchase
 confirmation.
 
+## Companion tweak (`tweak/`)
+
+`tweak/` now ships the Logos source of `IAPCheck.dylib`, built with Theos as
+`com.adr.checkiap.tweak` (rootless). It is injected into every UIKit process
+plus `storekitd`/`itunesstored`:
+
+- Inside an app it swizzles `SKProductsRequest`/`SKPaymentQueue`, captures
+  every product the host app fetches (price, subscription period, free-trial
+  and promo offers) and persists `<bundleId>_iap.json` into the shared bridge
+  directories (`/var/mobile/Documents/IAPCheck`, `/var/jb/…`, `/tmp/IAPCheck`).
+  A floating HUD inside the target app lists the captured products.
+- On launch it also probes the local receipt for known product identifiers so
+  a catalogue is captured even when the app does not query StoreKit itself.
+- `pending_scan.json` is a job queue consumed per-app (`bundleId` +
+  `productIds[]`). Entries addressed to NappStore carry a `proxyFor` bundle:
+  while pending, the daemon-side `SKClient` spoof makes the companion app's
+  own `SKProductsRequest` resolve the target's catalogue, so a known app's
+  IAP list is refreshed without launching it.
+- `pending_buy.json` + Darwin notification `com.adr.checkiap.trigger_buy`
+  makes the addressed app run a real `SKPaymentQueue` purchase.
+
+Build it with:
+
+```bash
+make -C tweak package FINALPACKAGE=1
+```
+
+Install the produced `.deb` on a jailbroken/rootless device. NappStore then
+lists every installed app (via `LSApplicationWorkspace` on jailbreak/TrollStore
+devices) and shows the tweak's snapshots with trial/discount badges.
+
 ## Build an IPA without xcodebuild
 
 `build_ipa.sh` invokes `swiftc` with the iPhoneOS SDK, signs with the first

@@ -150,6 +150,26 @@ public struct AppIAPDetailView: View {
                 }
                 Spacer()
                 Button {
+                    // Seed the tweak with every product id we already know:
+                    // proxy scan resolves immediately, the queued entry also
+                    // refreshes the catalog next time the app itself runs.
+                    let ids = store.catalogProductIds(for: bundleId)
+                    if ids.isEmpty {
+                        TweakBridge.shared.requestCatalogScan(bundleId: bundleId, autoLaunch: true)
+                    } else {
+                        TweakBridge.shared.requestProxyScan(bundleId: bundleId, productIds: ids)
+                        TweakBridge.shared.requestCatalogScan(bundleId: bundleId, productIds: ids, autoLaunch: false)
+                    }
+                } label: {
+                    Label("Quét", systemImage: "bolt.badge.clock")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.iappayYellow)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Color.iappayYellow.opacity(0.15)))
+                }
+                .buttonStyle(.plain)
+                Button {
                     InstalledAppsScanner.shared.launchApp(bundleId: bundleId)
                 } label: {
                     Label("Mở", systemImage: "arrow.up.forward.app")

@@ -304,7 +304,7 @@ public final class StoreKitService: ObservableObject {
         for case let file as URL in enumerator {
             let ext = file.pathExtension.lowercased()
             guard (ext == "json" || ext == "plist"),
-                  !file.lastPathComponent.lowercased().contains("pending_buy") else { continue }
+                  !file.lastPathComponent.lowercased().hasPrefix("pending_") else { continue }
             guard let data = try? Data(contentsOf: file) else { continue }
 
             let bundleHint = bundleIDHint(for: file)
@@ -349,12 +349,37 @@ public final class StoreKitService: ObservableObject {
         return output.count > before
     }
 
+    /// Product identifiers already known for an app, harvested from parsed
+    /// catalog items and the tweak's own snapshots. These seed the
+    /// SKProductsRequest issued by the companion tweak — StoreKit requires
+    /// explicit identifiers, there is no catalog enumeration API.
+    public func catalogProductIds(for bundleId: String) -> [String] {
+        var seen = Set<String>()
+        var ids: [String] = []
+        for item in items where item.appBundleId == bundleId {
+            let productID = item.storeProductIdentifier
+            if !productID.isEmpty && seen.insert(productID).inserted { ids.append(productID) }
+        }
+        for snapshot in TweakBridge.shared.snapshots where snapshot.bundleId == bundleId {
+            for product in snapshot.products where seen.insert(product.productId).inserted {
+                ids.append(product.productId)
+            }
+        }
+        return ids
+    }
+
     private func bundleIDHint(for file: URL) -> String? {
-        let name = file.deletingPathExtension().lastPathComponent
+        var name = file.deletingPathExtension().lastPathComponent
         guard !name.isEmpty else { return nil }
-        if let range = name.range(of: "_v", options: .backwards), range.lowerBound > name.startIndex {
-            let candidate = String(name[..<range.lowerBound])
-            return candidate.contains(".") ? candidate : nil
+        // The tweak persists snapshots as `<bundleId>_iap.json`.
+        if name.hasSuffix("_iap") { name = String(name.dropLast(4)) }
+        // Versioned exports: `<bundleId>_v6.json`.
+        if let range = name.range(of: #"_v\d+(\.\d+)*$"#, options: .regularExpression) {
+            name.removeSubrange(range)
+        }
+        // Timestamped exports: `<bundleId>_<epoch>.json`.
+        if let range = name.range(of: #"_\d{9,}(\.\d+)?$"#, options: .regularExpression) {
+            name.removeSubrange(range)
         }
         return name.contains(".") ? name : nil
     }
