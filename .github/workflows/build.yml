@@ -32,6 +32,10 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Install Build Dependencies
+        run: |
+          brew install ldid dpkg
+
       - name: Setup Theos
         run: |
           git clone --recursive https://github.com/theos/theos.git ~/.theos/theos
