@@ -7,7 +7,7 @@ import SwiftUI
 // with a consistent minimal line-icon language.
 
 public enum AppGlyph: String, CaseIterable {
-    case archive, arrowDown, arrowLeft, arrowRight, arrowUp
+    case alertOctagon, archive, arrowDown, arrowLeft, arrowRight, arrowUp
     case barChart, bell, box, cart, chat, check, checkCircle
     case chevronDown, chevronLeft, chevronRight, chevronUp
     case clipboard, clock, close, code, compass, copy, creditCard
@@ -24,6 +24,8 @@ public enum AppGlyph: String, CaseIterable {
     /// SVG path data on a 24x24 canvas (stroke style, round caps/joins).
     public var pathData: String {
         switch self {
+        case .alertOctagon:
+            return "M7.86 2h8.28L21 7.86v8.28L16.14 22H7.86L3 16.14V7.86L7.86 2zM12 8v4M12 16h.01"
         case .archive:
             return "M21 8v13H3V8M1 3h22v5H1zM10 12h4"
         case .arrowDown:
@@ -285,7 +287,7 @@ public struct GlyphView: View {
     public let color: Color
     public let strokeWidth: CGFloat
 
-    public init(_ glyph: AppGlyph, size: CGFloat = 20, color: Color = .iappayTextPrimary, strokeWidth: CGFloat = 2) {
+    init(_ glyph: AppGlyph, size: CGFloat = 20, color: Color = .iappayTextPrimary, strokeWidth: CGFloat = 2) {
         self.glyph = glyph
         self.size = size
         self.color = color
@@ -294,16 +296,16 @@ public struct GlyphView: View {
 
     /// Convenience initializer that accepts the previous SF Symbol name
     /// strings so call sites only swap the view.
-    public init(sf name: String, size: CGFloat = 20, color: Color = .iappayTextPrimary, strokeWidth: CGFloat = 2) {
+    init(sf name: String, size: CGFloat = 20, color: Color = .iappayTextPrimary, strokeWidth: CGFloat = 2) {
         self.init(AppGlyph.mapped(from: name), size: size, color: color, strokeWidth: strokeWidth)
     }
 
     public var body: some View {
         Group {
             if glyph.isFilled {
-                GlyphShape(data: glyph.pathData).fill(color)
+                GlyphShape(glyph.pathData).fill(color)
             } else {
-                GlyphShape(data: glyph.pathData)
+                GlyphShape(glyph.pathData)
                     .stroke(color, style: StrokeStyle(
                         lineWidth: strokeWidth * size / 24.0,
                         lineCap: .round,

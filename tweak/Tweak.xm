@@ -171,12 +171,15 @@ static NSString *IAPCheckFormatPrice(NSDecimalNumber *price, NSLocale *locale) {
 static NSString *IAPCheckPeriodCode(SKProductSubscriptionPeriod *period) {
     if (!period) return @"";
     NSString *unit;
-    switch (period.unit) {
-        case SKProductSubscriptionPeriodUnitDay:   unit = @"D"; break;
-        case SKProductSubscriptionPeriodUnitWeek:  unit = @"W"; break;
-        case SKProductSubscriptionPeriodUnitMonth: unit = @"M"; break;
-        case SKProductSubscriptionPeriodUnitYear:  unit = @"Y"; break;
-        default:                                   unit = @"M"; break;
+    // The SKProductSubscriptionPeriodUnit constants were dropped from recent
+    // SDK headers (StoreKit1 removal) — compare the raw enum values instead:
+    // day=0, week=1, month=2, year=3.
+    switch ((NSInteger)period.unit) {
+        case 0:  unit = @"D"; break;
+        case 1:  unit = @"W"; break;
+        case 2:  unit = @"M"; break;
+        case 3:  unit = @"Y"; break;
+        default: unit = @"M"; break;
     }
     NSInteger units = period.numberOfUnits > 0 ? period.numberOfUnits : 1;
     return [NSString stringWithFormat:@"P%ld%@", (long)units, unit];
@@ -721,7 +724,6 @@ static IAPCheckHUDController *gHUDController;
 }
 
 - (void)refresh {
-    NSArray *rows = [self rows];
     NSInteger total = gCatalogByBundle[IAPCheckEffectiveBundle()].count;
     NSInteger trials = 0;
     for (NSDictionary *p in gCatalogByBundle[IAPCheckEffectiveBundle()].allValues) {
