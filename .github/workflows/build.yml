@@ -1,0 +1,115 @@
+name: Build & Release iOS App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Tạo GitHub Release (true/false)'
+        required: true
+        default: 'true'
+        type: boolean
+      tag_name:
+        description: 'Tên Tag (để trống sẽ tự tạo theo timestamp)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build DEB and IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git ~/.theos/theos
+          echo "THEOS=$HOME/.theos/theos" >> $GITHUB_ENV
+          echo "$HOME/.theos/theos/bin" >> $GITHUB_PATH
+
+      - name: Build with Theos (DEB)
+        run: |
+          make clean package FINALPACKAGE=1
+
+      - name: Package TIPA / IPA from Theos App
+        run: |
+          mkdir -p build/Payload
+          APP_DIR=$(find .theos/obj -name "*.app" -type d | head -n 1)
+          if [ -n "$APP_DIR" ]; then
+            echo "Found compiled app at $APP_DIR"
+            cp -R "$APP_DIR" build/Payload/
+            cd build
+            zip -qr ../packages/NappStore.tipa Payload
+            cp ../packages/NappStore.tipa ../packages/NappStore.ipa
+            cd ..
+          fi
+
+      - name: Build Standalone IPA (build_ipa.sh)
+        run: |
+          chmod +x build_ipa.sh
+          ./build_ipa.sh || true
+
+      - name: Collect Release Files
+        id: collect
+        run: |
+          mkdir -p release_assets
+          # Copy debs
+          find packages -name "*.deb" -exec cp {} release_assets/ \; 2>/dev/null || true
+          # Copy ipas/tipas
+          find packages -name "*.tipa" -exec cp {} release_assets/ \; 2>/dev/null || true
+          find packages -name "*.ipa" -exec cp {} release_assets/ \; 2>/dev/null || true
+          find output -name "*.ipa" -exec cp {} release_assets/ \; 2>/dev/null || true
+          
+          echo "Danh sách file build thành công:"
+          ls -lh release_assets/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NappStore-Build-${{ github.sha }}
+          path: release_assets/*
+          if-no-files-found: warn
+
+      - name: Prepare Release Tag
+        id: release_tag
+        if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="v1.0.$(date +%Y%m%d%H%M)"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: "Release ${{ steps.release_tag.outputs.tag }}"
+          body: |
+            ### NappStore iOS Build
+            - Commit: `${{ github.sha }}`
+            - Ref: `${{ github.ref }}`
+            
+            #### Tải về:
+            - **.deb**: Dùng cho thiết bị đã Jailbreak hoặc quản lý gói Sileo / Zebra / Filza.
+            - **.ipa / .tipa**: Dùng để cài qua TrollStore, AltStore, SideStore, Sideloadly.
+          draft: false
+          prerelease: false
+          files: release_assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,17 @@
+# Build and staging artifacts
+.theos/
+.theos_build/
+build/
+packages/
+output/
+*.o
+*.swiftdeps
+*.dia
+*.lib
+*.exp
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
