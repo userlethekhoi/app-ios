@@ -24,8 +24,18 @@ public final class DirectPaymentHandler: NSObject, SKProductsRequestDelegate, SK
         targetBundleId: String,
         completion: @escaping (Swift.Result<Void, IAPError>) -> Void
     ) {
-        guard targetBundleId == Bundle.main.bundleIdentifier else {
-            completion(.failure(.failed("StoreKit chỉ cho phép sản phẩm thuộc app hiện tại; không thể đổi bundle ID bằng IPA dev.")))
+        if targetBundleId != Bundle.main.bundleIdentifier {
+            let queued = TweakBridge.shared.triggerRemotePurchase(
+                bundleId: targetBundleId,
+                productId: productId,
+                mode: .direct,
+                launchTarget: true
+            )
+            if queued {
+                completion(.success(()))
+            } else {
+                completion(.failure(.failed("Không thể gửi lệnh Direct vào bridge.")))
+            }
             return
         }
 

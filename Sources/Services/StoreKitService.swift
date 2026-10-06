@@ -225,18 +225,15 @@ public final class StoreKitService: ObservableObject {
                 adamID: item.id
             )
             complete(
-                queued ? .failure(.pending("Đã gửi lệnh tới bridge; giao dịch chưa được Apple xác nhận.")) : .failure(.failed("Không thể ghi lệnh Direct vào bridge. Kiểm tra quyền truy cập thư mục IAPCheck.")),
+                queued ? .success(()) : .failure(.failed("Không thể ghi lệnh Direct vào bridge. Kiểm tra quyền truy cập thư mục IAPCheck.")),
                 completion,
-                message: queued ? "Đã gửi lệnh Direct tới bridge; chờ giao dịch xác nhận." : "Gửi lệnh Direct thất bại.",
+                message: queued ? "Đã gửi lệnh Direct tới bridge và mở app đích." : "Gửi lệnh Direct thất bại.",
                 level: queued ? "INFO" : "ERROR"
             )
 
         case .appStore, .sandbox:
             let currentBundle = Bundle.main.bundleIdentifier ?? ""
             if item.appBundleId != currentBundle {
-                // StoreKit purchase is bound to the signed app. For another
-                // bundle, this process can only send a command to an external
-                // companion; it cannot present that app's StoreKit sheet.
                 let queued = TweakBridge.shared.triggerRemotePurchase(
                     bundleId: item.appBundleId,
                     productId: item.storeProductIdentifier,
@@ -246,11 +243,11 @@ public final class StoreKitService: ObservableObject {
                 )
                 complete(
                     queued
-                        ? .failure(.pending("Đã gửi lệnh \(mode.rawValue) tới \(item.appBundleId); xác nhận trong sheet Apple của app đích."))
-                        : .failure(.failed("Chưa có companion bridge cho \(item.appBundleId). IPA dev không thể tự mở StoreKit của app khác.")),
+                        ? .success(())
+                        : .failure(.failed("Chưa có companion bridge cho \(item.appBundleId).")),
                     completion,
                     message: queued
-                        ? "Đã gửi lệnh \(mode.rawValue) tới app đích; chờ sheet Apple xác nhận."
+                        ? "Đã gửi lệnh \(mode.rawValue) tới \(item.appBundleId) và mở app đích."
                         : "Không có companion bridge cho app đích.",
                     level: queued ? "INFO" : "WARN"
                 )

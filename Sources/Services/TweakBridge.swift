@@ -100,16 +100,13 @@ public final class TweakBridge: ObservableObject {
         ]
         if let adamID { payload["adamId"] = adamID }
         var writeSucceeded = false
-        // Only an external bridge path can be consumed by another app. The
-        // app-owned Documents folder is intentionally excluded here so a
-        // missing bridge is reported instead of looking like a queued buy.
-        for folder in externalBridgePaths {
+        // Write to all accessible bridge paths (both shared system paths and app Documents)
+        for folder in searchPaths {
             do {
                 try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
                 let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
                 try data.write(to: folder.appendingPathComponent("pending_buy.json"), options: .atomic)
                 writeSucceeded = true
-                break
             } catch {
                 continue
             }

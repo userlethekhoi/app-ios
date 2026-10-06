@@ -72,9 +72,20 @@ public final class InstalledAppsScanner: ObservableObject {
     }
 
     public func launchApp(bundleId: String) {
-        // Public URL schemes are the supported path in a normal iOS build.
-        // The bundle-ID scheme is retained as a fallback for apps that expose
-        // it; many App Store apps use a branded scheme instead.
+        // Try private LSApplicationWorkspace first to launch by bundle ID directly
+        if let workspaceClass = NSClassFromString("LSApplicationWorkspace") as AnyObject as? NSObjectProtocol {
+            let defaultSelector = NSSelectorFromString("defaultWorkspace")
+            if workspaceClass.responds(to: defaultSelector),
+               let workspace = workspaceClass.perform(defaultSelector)?.takeUnretainedValue() as AnyObject? {
+                let openSelector = NSSelectorFromString("openApplicationWithBundleID:")
+                if workspace.responds(to: openSelector) {
+                    _ = workspace.perform(openSelector, with: bundleId)
+                    return
+                }
+            }
+        }
+
+        // Fallback to public URL schemes
         let knownSchemes: [String: String] = [
             "com.lemon.lvoverseas": "capcut",
             "com.openai.chat": "chatgpt",

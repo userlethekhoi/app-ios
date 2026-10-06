@@ -81,6 +81,7 @@ jobs:
           mkdir -p release_assets
           # Copy debs
           find packages -name "*.deb" -exec cp {} release_assets/ \; 2>/dev/null || true
+          find tweak -name "*.deb" -exec cp {} release_assets/ \; 2>/dev/null || true
           # Copy ipas/tipas
           find packages -name "*.tipa" -exec cp {} release_assets/ \; 2>/dev/null || true
           find packages -name "*.ipa" -exec cp {} release_assets/ \; 2>/dev/null || true
@@ -121,8 +122,9 @@ jobs:
             - Ref: `${{ github.ref }}`
             
             #### Tải về:
-            - **.deb**: Dùng cho thiết bị đã Jailbreak hoặc quản lý gói Sileo / Zebra / Filza.
-            - **.ipa / .tipa**: Dùng để cài qua TrollStore, AltStore, SideStore, Sideloadly.
+            - **com.adr.checkiap.tweak_1.0.0_iphoneos-arm64.deb**: Tweak companion chạy nền (hook storekitd/itunesstored để dump IAP và nhận lệnh mua).
+            - **com.dini.pay_...deb**: Ứng dụng giao diện cho máy Jailbreak.
+            - **NappStore.ipa / NappStore.tipa**: Ứng dụng giao diện cài qua TrollStore, AltStore, Sideloadly.
           draft: false
           prerelease: false
           files: release_assets/*
