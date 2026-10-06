@@ -94,7 +94,10 @@ PY
         --timestamp=none "${APP_DIR}"
     codesign --verify --deep --strict "${APP_DIR}"
 else
-    echo "[3/4] Không tìm thấy Apple Development identity/profile; tạo IPA chưa ký" >&2
+    echo "[3/4] Không tìm thấy Apple Development identity/profile; dùng ldid/ad-hoc sign" >&2
+    if command -v ldid >/dev/null 2>&1; then
+        ldid -S"${ROOT_DIR}/entitlements.plist" "${APP_DIR}/${APP_NAME}" 2>/dev/null || true
+    fi
 fi
 
 echo "[4/4] Đóng gói IPA"

@@ -52,6 +52,17 @@ jobs:
           APP_DIR=$(find .theos/obj -name "*.app" -type d | head -n 1)
           if [ -n "$APP_DIR" ]; then
             echo "Found compiled app at $APP_DIR"
+            if [ ! -f "$APP_DIR/Info.plist" ] && [ -f "Info.plist" ]; then
+              cp Info.plist "$APP_DIR/Info.plist"
+            fi
+            if [ ! -f "$APP_DIR/AppIcon.png" ] && [ -f "AppIcon.png" ]; then
+              cp AppIcon.png "$APP_DIR/AppIcon.png"
+            fi
+            if [ -d "CatalogData" ] && [ ! -d "$APP_DIR/CatalogData" ]; then
+              cp -R CatalogData "$APP_DIR/CatalogData"
+            fi
+            echo "=== App Bundle Contents ==="
+            ls -la "$APP_DIR"
             cp -R "$APP_DIR" build/Payload/
             cd build
             zip -qr ../packages/NappStore.tipa Payload
